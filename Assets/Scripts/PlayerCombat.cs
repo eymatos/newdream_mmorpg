@@ -2,43 +2,97 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour 
 { 
-    [Header("Ajustes de Ataque")] 
+    [Header("Ajustes de Ataque Básico")] 
     public float attackRange = 2f; 
     public float attackDamage = 10f; 
     public LayerMask enemyLayer;
 
+    [Header("Habilidad Especial (Área)")]
+    public float specialRange = 5f;
+    public float specialDamage = 25f;
+    public float manaCost = 20f;
+    
+    [Header("Efectos Visuales")]
+    public GameObject areaAttackEffect; // Aquí arrastraremos el efecto luego
+
+    private PlayerStats stats;
+
+    void Start()
+    {
+        // Importante: Buscamos las estadísticas en el mismo objeto
+        stats = GetComponent<PlayerStats>();
+    }
+
     void Update()
     {
-        // Detectamos cuando presionas la tecla Espacio
+        // Ataque básico (Espacio)
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Attack();
+        }
+
+        // Habilidad Especial (E)
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            // Verificamos si tenemos el componente y si hay maná suficiente
+            if (stats != null)
+            {
+                if (stats.UseMana(manaCost))
+                {
+                    SpecialAreaAttack();
+                }
+                else
+                {
+                    Debug.Log("No tienes maná suficiente para el ataque de área.");
+                }
+            }
         }
     }
 
     void Attack()
     {
-        // 1. Detectamos todos los objetos en la capa "Enemy" dentro del rango
         Collider[] hitEnemies = Physics.OverlapSphere(transform.position, attackRange, enemyLayer);
 
-        // 2. Por cada enemigo encontrado, le restamos vida
         foreach (Collider enemy in hitEnemies)
         {
-            // Buscamos el componente EnemyHealth en el objeto que golpeamos
             EnemyHealth health = enemy.GetComponent<EnemyHealth>();
-            
             if (health != null)
             {
                 health.TakeDamage(attackDamage);
-                Debug.Log("¡Golpeaste a " + enemy.name + "!");
             }
         }
     }
 
-    // Esto dibuja una esfera roja en la escena para que veas el alcance del golpe
+    void SpecialAreaAttack()
+    {
+        Debug.Log("¡Ejecutando Golpe de Área!");
+
+        // 1. Instanciar efecto visual si existe
+        if (areaAttackEffect != null)
+        {
+            GameObject effect = Instantiate(areaAttackEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 2f); // Se destruye tras 2 segundos
+        }
+        
+        // 2. Daño en área
+        Collider[] hitEnemies = Physics.OverlapSphere(transform.position, specialRange, enemyLayer);
+
+        foreach (Collider enemy in hitEnemies)
+        {
+            EnemyHealth health = enemy.GetComponent<EnemyHealth>();
+            if (health != null)
+            {
+                health.TakeDamage(specialDamage);
+            }
+        }
+    }
+
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
+        
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, specialRange);
     }
 }

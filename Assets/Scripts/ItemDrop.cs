@@ -7,6 +7,10 @@ public class ItemDrop : MonoBehaviour
     public int amount = 1;
     public int experienceBonus = 10;
 
+    [Header("Efecto de Consumible")]
+    public bool isConsumable = true;
+    public float healthRegen = 20f; 
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))

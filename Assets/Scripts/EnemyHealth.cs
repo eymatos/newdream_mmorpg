@@ -8,24 +8,22 @@ public class EnemyHealth : MonoBehaviour
     private float currentHealth; 
     
     [Header("Botín (Drop)")]
-    public GameObject itemToDrop; // Arrastra aquí el Prefab del Drop_Jalea
+    public GameObject itemToDrop; 
 
-    public HealthBar healthBar;
+    [Header("Referencia UI")]
+    // Esta casilla se llenará sola al darle a Play gracias al script de la barra
+    public FloatingHealthBar healthBar;
 
     void Start()
     {
         currentHealth = maxHealth;
-        
-        if (healthBar != null)
-        {
-            healthBar.SetMaxHealth(maxHealth);
-        }
     }
 
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
         
+        // Si la barra logró vincularse, se actualizará aquí
         if (healthBar != null)
         {
             healthBar.SetHealth(currentHealth);
@@ -41,20 +39,20 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("¡El enemigo ha muerto!");
-
-        // 1. Soltar el objeto
         if (itemToDrop != null)
         {
-            // Instanciamos el item en la posición donde murió el slime
             Instantiate(itemToDrop, transform.position, Quaternion.identity);
         }
 
-        // 2. Dar experiencia
         PlayerStats player = FindFirstObjectByType<PlayerStats>();
         if (player != null)
         {
             player.AddExperience(xpReward);
+        }
+
+        if (healthBar != null)
+        {
+            Destroy(healthBar.gameObject);
         }
 
         Destroy(gameObject);

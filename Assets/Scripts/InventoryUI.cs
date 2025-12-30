@@ -1,24 +1,24 @@
 using UnityEngine;
+using UnityEngine.UI; // Necesario para el componente Button
 using TMPro;
 using System.Collections.Generic;
 
 public class InventoryUI : MonoBehaviour
 {
-    public InventoryManager inventory; // Referencia al inventario del player
-    public GameObject inventoryPanel;   // El panel que creamos arriba
-    public TextMeshProUGUI itemTextPrefab; // Un prefab de texto para cada item
-    public Transform itemListParent;    // El objeto Item_List
+    public InventoryManager inventory;
+    public GameObject inventoryPanel;
+    public TextMeshProUGUI itemTextPrefab;
+    public Transform itemListParent;
 
     private bool isOpen = false;
 
     void Start()
     {
-        inventoryPanel.SetActive(false); // Empezamos con el inventario cerrado
+        inventoryPanel.SetActive(false);
     }
 
     void Update()
     {
-        // Abrir/Cerrar con la tecla I
         if (Input.GetKeyDown(KeyCode.I))
         {
             ToggleInventory();
@@ -36,7 +36,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    void RefreshInventory()
+    public void RefreshInventory()
     {
         // 1. Limpiamos la lista vieja
         foreach (Transform child in itemListParent)
@@ -44,11 +44,29 @@ public class InventoryUI : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        // 2. Creamos un texto por cada objeto que tengamos
+        // 2. Creamos un elemento por cada objeto que tengamos
         foreach (KeyValuePair<string, int> item in inventory.items)
         {
+            // Instanciamos el texto
             TextMeshProUGUI newText = Instantiate(itemTextPrefab, itemListParent);
             newText.text = item.Key + " x" + item.Value;
+
+            // --- MEJORA: Añadir interactividad ---
+            // Buscamos o añadimos un componente Button al texto instanciado
+            Button btn = newText.gameObject.GetComponent<Button>();
+            if (btn == null)
+            {
+                btn = newText.gameObject.AddComponent<Button>();
+            }
+
+            // Guardamos el nombre del item para el evento
+            string nameToUse = item.Key;
+
+            // Configuramos el clic del botón
+            btn.onClick.AddListener(() => {
+                inventory.UseItem(nameToUse);
+                RefreshInventory(); // Refrescamos para ver la nueva cantidad
+            });
         }
     }
 }
